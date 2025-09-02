@@ -142,13 +142,7 @@ The application will be accessible at `http://localhost:3000`.
 
 ## Powered By
 
-> [ZREX MetaLib](https://zrex.netlify.app)
-
----
-
-## License
-
-MIT License
+> [MetaLib GPT](https://zrex.netlify.app)
 
 ---
 
