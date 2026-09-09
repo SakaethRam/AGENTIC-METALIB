@@ -1,4 +1,4 @@
-# MetaLib
+# METALIB: AGENTIC DATA FLOW
 
 MetaLib is an evidence-grounded customer-support intelligence system. It learns
 from historical support conversations, classifies incoming intent, retrieves
@@ -10,12 +10,20 @@ the modular intelligence core, a CLI demonstration, and a reproducible
 evaluation harness. It is designed for the Hiver SDE Intern take-home
 assignment.
 
+<img width="1832" height="862" alt="LIB-#1" src="https://github.com/user-attachments/assets/69a65282-934a-42d0-8a17-0344855e5a39" />
+
+<img width="1852" height="848" alt="LIB-#2" src="https://github.com/user-attachments/assets/ae52c984-e16d-48e5-bd18-34ce47835c74" />
+
+---
+
 ## Why it exists
 
 Support automation should not only generate an answer. It should understand
 the evidence, make the routing decision, and make that decision inspectable.
 MetaLib keeps those stages explicit so the system can be evaluated, replaced,
 and explained.
+
+---
 
 ## Quick start
 
@@ -44,6 +52,8 @@ The API server is a separate process:
 pnpm --filter @workspace/api-server run dev
 ```
 
+---
+
 ## Architecture
 
 ```text
@@ -71,6 +81,8 @@ server currently exposes:
 * `POST /api/pipeline/analyze`
 * `GET /api/evaluation/summary`
 
+---
+
 ## CLI and AI architecture
 
 `metlib_core/pipeline.py` keeps the pipeline stages replaceable:
@@ -84,6 +96,8 @@ The deterministic mode is deliberate. A reviewer can reproduce the baseline
 without an API key, while the interfaces leave room for a future LLM,
 embedding model, classifier, or retrieval strategy.
 
+---
+
 ## Dataset and intent taxonomy
 
 The included `data/golden_set.jsonl` is a small, transparent demonstration
@@ -96,6 +110,8 @@ Current demo intents:
 * `DUPLICATE_CHARGE`
 * `ACCOUNT_ACCESS`
 * `GENERAL_SUPPORT`
+
+---
 
 ## Evaluation methodology
 
@@ -117,6 +133,8 @@ The harness includes a comparison vocabulary for a trivial baseline, a simple
 keyword baseline, and MetaLib. Illustrative values on the landing page are
 explicitly marked as illustrative and must not be treated as measured results.
 
+---
+
 ## Configuration
 
 Copy `.env.example` to `.env` when configuring a real model:
@@ -131,6 +149,8 @@ METALIB_MODE=demo
 
 No secret is required for the included demo mode.
 
+---
+
 ## Render deployment
 
 The API is separated from the frontend and binds to the `PORT` environment
@@ -143,6 +163,8 @@ Start: pnpm --filter @workspace/api-server run start
 
 Set `MODEL`, `DATASET_PATH`, and any provider-specific secret in Render's
 environment settings. Keep `.env` files and real API keys out of Git.
+
+---
 
 ## Project structure
 
@@ -157,6 +179,8 @@ cli/                        Zero-setup CLI entrypoint
 data/                       Transparent golden-set example
 evaluation/                 Generated machine-readable results
 ```
+
+---
 
 ## Limitations and decision log
 
