@@ -16,8 +16,8 @@ Dataset:
 
 Runtime:
     - Kaggle dataset is downloaded automatically with kagglehub
-    - Groq API key is read from GROQ_API_KEY
-    - LLM model is read from GROQ_MODEL
+    - MetaLib connects to the hosted Render API
+    - The Groq API key and model remain server-side on Render
 
 IMPORTANT:
     This file is intentionally standalone.
@@ -52,7 +52,7 @@ from typing import Optional
 
 from dotenv import load_dotenv
 import kagglehub
-from groq import Groq
+import requests
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -133,7 +133,7 @@ def metalib_startup_animation() -> None:
         "Loading historical support intelligence",
         "Loading classifier",
         "Loading retrieval index",
-        "Connecting to Groq",
+        "Connecting to MetaLib API",
     ]
 
     for message in startup_messages:
@@ -183,8 +183,8 @@ CACHE_FILE = (
 
 # Runtime configuration is supplied by the environment.
 # The script never embeds a provider key or a model identifier.
-GROQ_API_KEY_ENV = "GROQ_API_KEY"
-GROQ_MODEL_ENV = "GROQ_MODEL"
+METALIB_API_URL_ENV = "METALIB_API_URL"
+DEFAULT_METALIB_API_URL = "https://agentic-metalib.onrender.com"
 
 # Kaggle dataset.
 KAGGLE_DATASET = (
@@ -1023,86 +1023,42 @@ class HistoricalRetriever:
 # ============================================================================
 
 
-class GroqSupportLLM:
+class MetaLibSupportLLM:
 
     """
-    Groq-backed LLM layer.
+    Render-backed LLM layer.
 
-    The API key is never hard-coded.
+    The CLI never receives or stores the Groq API key.
 
-    Expected environment variable:
+    The request flow is:
 
-        GROQ_API_KEY
-
-    The model is read from GROQ_MODEL.
+        MetaLib CLI
+            |
+            v
+        Render API
+            |
+            v
+        Groq
+            |
+            v
+        LLM response
     """
 
     def __init__(self) -> None:
 
-        api_key = os.getenv(GROQ_API_KEY_ENV)
+        self.api_url = os.getenv(
+            METALIB_API_URL_ENV,
+            DEFAULT_METALIB_API_URL,
+        ).rstrip("/")
 
-        if not api_key:
+        if not self.api_url:
             raise RuntimeError(
-                "GROQ_API_KEY is not set in the .env file or environment."
+                "METALIB_API_URL is not configured."
             )
 
-        model = os.getenv(GROQ_MODEL_ENV)
-
-        if not model:
-            raise RuntimeError(
-                "GROQ_MODEL is not set in the .env file or environment."
-            )
-
-        self.client = Groq(
-            api_key=api_key
-        )
-
-        self.model = model
-
-    def _chat(
-        self,
-        system_prompt: str,
-        user_prompt: str,
-    ) -> str:
-
-        response = (
-            self.client
-            .chat
-            .completions
-            .create(
-                model=self.model,
-
-                messages=[
-                    {
-                        "role": "system",
-                        "content": system_prompt,
-                    },
-                    {
-                        "role": "user",
-                        "content": user_prompt,
-                    },
-                ],
-
-                temperature=0.1,
-
-                max_tokens=800,
-            )
-        )
-
-        content = (
-            response
-            .choices[0]
-            .message
-            .content
-        )
-
-        if not content:
-
-            raise RuntimeError(
-                "Groq returned an empty response."
-            )
-
-        return content.strip()
+        # The actual Groq model is intentionally not exposed to
+        # the client. Render controls the model server-side.
+        self.model = "Render API"
 
     def analyze(
         self,
@@ -1159,93 +1115,27 @@ The draft reply must contain only actions, required information,
 policies, timelines, refunds, or operational capabilities explicitly
 supported by the historical resolutions.
 
-Do not combine requirements from unrelated evidence unless the
-evidence clearly supports doing so.
-
-When requesting information from the customer, ONLY request
-information that is explicitly named in at least one historical
-resolution.
-
-Do not infer that an information field is required simply because it
-would normally be useful for customer support.
-
-Do not invent or infer:
-- order numbers
-- account details
-- email addresses
-- phone numbers
-- names
-- addresses
-- refund eligibility
-- refund processing
-- payment methods
-- timelines
-- teams
-- escalation workflows
-- troubleshooting steps
-
-The customer request itself is NOT evidence that an action or
-information requirement is supported.
-
-Never promise that the customer's requested outcome will occur.
-
-Do not say that an issue will be resolved, a payment will succeed,
-a refund will be issued, a charge will be reversed, or an action will
-be completed unless the historical resolution explicitly supports
-that outcome.
-
-If the evidence only supports investigation, contact, review, or
-assistance, the response must stop at that supported action.
+Do not invent or infer operational capabilities.
 
 If the historical evidence does not clearly support a specific
 instruction or requested outcome, omit it rather than infer it.
 
-Do not add conversational filler that implies an unsupported capability
-or next step, such as "we'll advise next steps", "we'll get this resolved",
-"we'll help you complete the payment", or similar language.
-
-CASE-SPECIFIC GROUNDING:
-
-Treat each historical resolution as a separate case.
-
-Do not combine, merge, or transfer operational instructions,
-contact methods, phone numbers, URLs, account requirements, or
-workflows between different historical cases unless the same
-instruction is independently supported by multiple relevant cases.
-
-A resolution from one brand, company, or account must not be presented
-as an instruction for another brand, company, or account.
-
-Never copy a case-specific phone number, email address, URL,
-contact channel, account requirement, or workflow into the response
-unless the customer context clearly matches that historical case.
-
-Do not combine an operational instruction from one historical case
-with the issue described in another historical case merely because
-both cases share the same intent.
-
-If no single relevant historical case clearly supports the proposed
-customer action, do not generate that action. Escalate instead.
+If no relevant historical resolution supports the request, ESCALATE.
 
 INTENT RULES:
 
-The supplied candidate intent comes from a statistical classifier trained
-on automatically bootstrapped historical labels. Treat it as a candidate,
-not as ground truth.
+The supplied candidate intent comes from a statistical classifier.
+Treat it as a candidate, not as ground truth.
 
-Identify the UNDERLYING CUSTOMER PROBLEM rather than merely the requested
-action. Specific issue intents take priority over generic action intents.
+Identify the underlying customer problem rather than merely the
+requested action.
 
 Examples:
+
 - "I was charged twice and want a refund" -> DUPLICATE_CHARGE
 - "I cancelled my order and want my money back" -> REFUND_REQUEST
 - "My payment was declined" -> PAYMENT
 - "Where is my order? It is two days late" -> DELIVERY
-
-A refund request does not automatically mean REFUND_REQUEST when the
-underlying problem is a duplicate charge, failed payment, cancellation,
-delivery issue, or another more specific problem.
-
 
 ESCALATION:
 
@@ -1280,20 +1170,6 @@ decision must be exactly one of:
 - ESCALATE
 
 intent_confidence must be between 0 and 1.
-
-EVIDENCE RELEVANCE RULE:
-
-Prefer evidence that matches both the customer's intent and the
-specific issue being described.
-
-Do not use a historical resolution merely because it contains
-similar words.
-
-Do not transfer an action, policy, refund, timeline, or workflow from
-one issue to another.
-
-If the evidence does not clearly support a resolution for the
-customer's specific request, the correct decision is ESCALATE.
 """.strip()
 
         user_prompt = f"""
@@ -1315,13 +1191,77 @@ Now independently assess the message using the evidence.
 Return JSON only.
 """.strip()
 
-        raw = self._chat(
-            system_prompt,
-            user_prompt,
+        payload = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt,
+                },
+            ]
+        }
+
+        try:
+
+            response = requests.post(
+                f"{self.api_url}/chat",
+                json=payload,
+                timeout=90,
+            )
+
+        except requests.RequestException as exc:
+
+            raise RuntimeError(
+                f"Unable to reach MetaLib API: {exc}"
+            ) from exc
+
+        if response.status_code == 429:
+
+            raise RuntimeError(
+                "MetaLib API rate limit reached. "
+                "Please try again later."
+            )
+
+        if not response.ok:
+
+            try:
+                detail = response.json().get(
+                    "detail",
+                    "Unknown API error.",
+                )
+            except ValueError:
+                detail = response.text or "Unknown API error."
+
+            raise RuntimeError(
+                f"MetaLib API returned HTTP "
+                f"{response.status_code}: {detail}"
+            )
+
+        try:
+
+            data = response.json()
+
+        except ValueError as exc:
+
+            raise RuntimeError(
+                "MetaLib API returned invalid JSON."
+            ) from exc
+
+        result = data.get(
+            "response"
         )
 
+        if not result:
+
+            raise RuntimeError(
+                "MetaLib API returned an empty LLM response."
+            )
+
         return self._parse_json(
-            raw
+            result
         )
 
     @staticmethod
@@ -1331,7 +1271,6 @@ Return JSON only.
 
         cleaned = raw.strip()
 
-        # Handle accidental markdown fences.
         if cleaned.startswith(
             "```"
         ):
@@ -1357,7 +1296,6 @@ Return JSON only.
 
         except json.JSONDecodeError:
 
-            # Attempt to recover the first JSON object.
             match = re.search(
                 r"\{.*\}",
                 cleaned,
@@ -1392,7 +1330,6 @@ Return JSON only.
             )
 
         return parsed
-
 
 # ============================================================================
 # LLM OUTPUT VALIDATION
@@ -1861,10 +1798,10 @@ class MetaLibAgent:
         # ------------------------------------------------------------------
 
         print(
-            "Connecting to Groq..."
+            "Connecting to MetaLib API..."
         )
 
-        self.llm = GroqSupportLLM()
+        self.llm = MetaLibSupportLLM()
 
     def analyze(
         self,
