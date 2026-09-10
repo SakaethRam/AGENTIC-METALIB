@@ -21,7 +21,7 @@ The system is designed around one core principle:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/SakaethRam/MetaLib-AI.git && cd AGENTIC-METALIB
+git clone https://github.com/SakaethRam/AGENTIC-METALIB.git && cd AGENTIC-METALIB
 ```
 
 ### 2. Install MetaLib
@@ -682,4 +682,4 @@ Users interact with the hosted API rather than receiving the underlying provider
 
 # License
 
-MetaLib AI is distributed under the terms defined in [`LICENSE`](LICENSE).
+MetaLib AI is distributed under the terms defined in `LICENSE`.
