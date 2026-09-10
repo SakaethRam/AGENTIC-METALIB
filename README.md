@@ -34,7 +34,7 @@ pip install -r Requirements.txt && pip install -e .
 metalib
 ```
 
-### 3.1. For Regular Usage
+### 3.1. For Regular Usage `(Not included in the setup steps)`
 
 ```bash
 cd AGENTIC-METALIB && metalib
