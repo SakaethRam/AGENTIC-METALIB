@@ -6,9 +6,7 @@ MetaLib is a standalone Python CLI that combines intent classification, historic
 
 The system is designed around one core principle:
 
-**Historical evidence is the source of truth for operational support actions.**
-
->VISIT METALIB : [@MetaLib]()
+>**Historical evidence is the source of truth for operational support actions.**
 
 <img width="1832" height="862" alt="LIB-#1" src="https://github.com/user-attachments/assets/69a65282-934a-42d0-8a17-0344855e5a39" />
 
@@ -16,7 +14,7 @@ The system is designed around one core principle:
 
 ---
 
-## END-USER SET-UP GUIDE (# IMPORTANT)
+## END-USER SET-UP GUIDE (#IMPORTANT)
 
 ### 1. Clone the repository
 
