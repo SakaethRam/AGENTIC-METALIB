@@ -34,6 +34,12 @@ pip install -r Requirements.txt && pip install -e .
 metalib
 ```
 
+### 3.1. For Regular Usage
+
+```bash
+cd AGENTIC-METALIB && metalib
+```
+
 MetaLib automatically handles dataset preparation and connects to the hosted MetaLib API for LLM-powered analysis.
 
 ### Release Contents
