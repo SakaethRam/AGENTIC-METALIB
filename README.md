@@ -40,9 +40,9 @@ MetaLib automatically handles dataset preparation and connects to the hosted Met
 
 ### Release Contents
 
-This release includes the complete [@MetaLib-AI](https://github.com/SakaethRam/AGENTIC-METALIB/releases/tag/v1.0.0) source code and the packaged CLI distribution.
+This release includes the [@MetaLib-AI](https://github.com/SakaethRam/AGENTIC-METALIB/releases/tag/v1.0.0) dataset and the packaged CLI distribution.
 
-The **complete pre-built dataset is also included** for faster setup. Users should use the included dataset when running the packaged release. MetaLib can alternatively download and prepare the dataset automatically on first run, but this process may take **30+ minutes**.
+The **complete pre-built dataset is included** for faster setup. Users should use the included dataset when running the packaged release. MetaLib can alternatively download and prepare the dataset automatically on first run, but this process may take **30+ minutes**.
 
 **Version:** `1.0.0`
 
