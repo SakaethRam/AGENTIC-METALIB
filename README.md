@@ -1,14 +1,14 @@
-# METALIB: AGENTIC DATA FLOW
+# METALIB AI: AGENTIC DATA FLOW
 
-MetaLib is an evidence-grounded customer-support intelligence system. It learns
-from historical support conversations, classifies incoming intent, retrieves
-similar resolutions, drafts a brand-consistent response, and decides when the
-case must be escalated to a human.
+AI-powered customer support analysis and response drafting, grounded in historical support cases.
 
-This repository contains the presentation layer, a Render-ready API boundary,
-the modular intelligence core, a CLI demonstration, and a reproducible
-evaluation harness. It is designed for the Hiver SDE Intern take-home
-assignment.
+MetaLib is a standalone Python CLI that combines intent classification, historical case retrieval, and LLM reasoning to determine whether a customer-support request can be handled automatically or should be escalated to a human.
+
+The system is designed around one core principle:
+
+**Historical evidence is the source of truth for operational support actions.**
+
+>VISIT METALIB : [@MetaLib]()
 
 <img width="1832" height="862" alt="LIB-#1" src="https://github.com/user-attachments/assets/69a65282-934a-42d0-8a17-0344855e5a39" />
 
@@ -16,180 +16,670 @@ assignment.
 
 ---
 
-## Why it exists
+## END-USER SET-UP GUIDE
 
-Support automation should not only generate an answer. It should understand
-the evidence, make the routing decision, and make that decision inspectable.
-MetaLib keeps those stages explicit so the system can be evaluated, replaced,
-and explained.
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/SakaethRam/MetaLib-AI.git && cd AGENTIC-METALIB
+```
+
+### 2. Install MetaLib
+
+```bash
+pip install -r Requirements.txt && pip install -e .
+```
+
+### 3. Launch MetaLib
+
+```bash
+metalib
+```
+
+MetaLib automatically handles dataset preparation and connects to the hosted MetaLib API for LLM-powered analysis.
+
+>**No Groq API key, `.env` configuration, backend setup, or Render deployment is required for end users. If Developer, See the Developer Installation Guide below for detailed local-system setup instructions.**
 
 ---
 
-## Quick start
+## Overview
 
-The zero-setup CLI path is intentionally dependency-light:
+MetaLib processes an incoming customer-support message through three complementary layers:
 
-```bash
-git clone <repository>
-cd metlib
-./run
-```
+1. **Intent Classification**
+   - Predicts the customer's support intent using a TF-IDF + Logistic Regression classifier.
+   - Applies deterministic intent rules where appropriate.
 
-The command creates a local virtual environment, loads the included golden
-set, runs a duplicate-charge demonstration through the pipeline, evaluates the
-dataset, and writes machine-readable output to `evaluation/results.json`.
+2. **Historical Retrieval**
+   - Retrieves semantically similar historical customer-support cases.
+   - Uses the retrieved resolutions as grounding evidence for the response.
 
-The web presentation runs in the included pnpm workspace:
+3. **LLM Reasoning**
+   - Analyzes the customer request against the retrieved historical evidence.
+   - Drafts a support response.
+   - Determines whether the request can be safely auto-handled or requires human escalation.
 
-```bash
-pnpm install
-pnpm --filter @workspace/metalib run dev
-```
-
-The API server is a separate process:
-
-```bash
-pnpm --filter @workspace/api-server run dev
-```
+The final system fails closed when sufficient historical evidence is unavailable or when the proposed response is not adequately grounded.
 
 ---
 
 ## Architecture
 
 ```text
-Historical Twitter conversations
-  → cleaning / thread reconstruction
-  → brand selection and intent taxonomy
-  → historical resolution index
-  → intent classification
-  → evidence retrieval
-  → grounded response generation
-  → escalation decision
-  → evaluation
-```
+                    ┌──────────────────────┐
+                    │   MetaLib CLI        │
+                    │   Python Application  │
+                    └──────────┬───────────┘
+                               │
+             ┌─────────────────┼─────────────────┐
+             │                 │                 │
+             ▼                 ▼                 ▼
+      Intent Classifier   Historical Search   Request Analysis
+             │                 │                 │
+             └─────────────────┼─────────────────┘
+                               ▼
+                    ┌──────────────────────┐
+                    │   MetaLib API        │
+                    │   Hosted on Render   │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                         Groq LLM API
+                               │
+                               ▼
+                    Grounded Final Decision
+                               │
+                 ┌─────────────┴─────────────┐
+                 ▼                           ▼
+           AUTO_HANDLE                   ESCALATE
+````
 
-The frontend lives at `/home` in the product brief and is served at the root
-route in this workspace. It uses the typed API contract for pipeline overview,
-demo analysis, and evaluation summary surfaces.
-
-The API contract is source-controlled in `lib/api-spec/openapi.yaml`. Run
-`pnpm --filter @workspace/api-spec run codegen` after changing it. The Express
-server currently exposes:
-
-* `GET /api/healthz`
-* `GET /api/pipeline/overview`
-* `POST /api/pipeline/analyze`
-* `GET /api/evaluation/summary`
-
----
-
-## CLI and AI architecture
-
-`metlib_core/pipeline.py` keeps the pipeline stages replaceable:
-
-* `classify_intent` — deterministic demo classifier
-* `retrieve_evidence` — transparent historical evidence lookup
-* `draft_response` — grounded response generator
-* `decide` — risk-aware routing
-
-The deterministic mode is deliberate. A reviewer can reproduce the baseline
-without an API key, while the interfaces leave room for a future LLM,
-embedding model, classifier, or retrieval strategy.
+The Groq API key and model configuration remain server-side on the hosted API. They are never required by or distributed with the CLI.
 
 ---
 
-## Dataset and intent taxonomy
+## Key Capabilities
 
-The included `data/golden_set.jsonl` is a small, transparent demonstration
-dataset with `message`, `intent`, `expected_action`, and `evidence` fields.
-Replace it with a 150–250 example manually labelled golden set before making
-claims about production quality.
+### Intent Classification
 
-Current demo intents:
+MetaLib classifies incoming support requests into customer-support intents using a locally prepared machine-learning classifier.
 
-* `DUPLICATE_CHARGE`
-* `ACCOUNT_ACCESS`
-* `GENERAL_SUPPORT`
+The classifier provides:
 
----
+* Predicted intent
+* Classification confidence
+* Deterministic rule overrides for high-confidence patterns
 
-## Evaluation methodology
+### Historical Case Retrieval
 
-`metlib_core/evaluation.py` compares predictions against the golden set and
-saves:
+MetaLib retrieves relevant historical support cases from the customer-support dataset.
 
-* intent accuracy and F1
-* escalation F1
-* evidence-grounding status
-* reply-quality and LLM-judge agreement placeholders until human labels exist
-* inspectable failure records
+Each retrieved case provides:
 
-`metlib_core/judge.py` defines the structured judge contract across relevance,
-grounding, correctness, brand consistency, safety, and escalation
-appropriateness. `data/human_validation.jsonl` is the transparent label format;
-its `null` values are intentional until a human reviewer supplies ratings.
+* Historical customer message
+* Historical resolution
+* Similarity score
+* Case identifier
 
-The harness includes a comparison vocabulary for a trivial baseline, a simple
-keyword baseline, and MetaLib. Illustrative values on the landing page are
-explicitly marked as illustrative and must not be treated as measured results.
+This evidence is passed to the reasoning layer instead of relying solely on the LLM's general knowledge.
 
----
+### Grounded Response Drafting
 
-## Configuration
+The LLM is instructed to generate responses using only information supported by the retrieved historical resolutions.
 
-Copy `.env.example` to `.env` when configuring a real model:
+MetaLib is designed to avoid inventing:
+
+* Refund policies
+* Operational capabilities
+* Processing timelines
+* Account actions
+* Support procedures
+* Other unsupported commitments
+
+### Auto-Handle vs Escalation
+
+Each request receives a final operational decision:
 
 ```text
-LLM_API_KEY=
-MODEL=deterministic-demo
-DATASET_PATH=data/golden_set.jsonl
-RESULTS_PATH=evaluation/results.json
-METALIB_MODE=demo
+AUTO_HANDLE
 ```
 
-No secret is required for the included demo mode.
-
----
-
-## Render deployment
-
-The API is separated from the frontend and binds to the `PORT` environment
-variable. A Render web service can use the API server's build/start commands:
+or
 
 ```text
-Build: pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
-Start: pnpm --filter @workspace/api-server run start
+ESCALATE
 ```
 
-Set `MODEL`, `DATASET_PATH`, and any provider-specific secret in Render's
-environment settings. Keep `.env` files and real API keys out of Git.
+Automatic handling requires sufficient historical evidence and a response that remains within the capabilities supported by that evidence.
+
+Requests involving ambiguity, insufficient evidence, unsupported actions, or human judgment are escalated.
 
 ---
 
-## Project structure
+## Dataset
+
+MetaLib uses the public Twitter customer-support dataset:
 
 ```text
-artifacts/metalib/          React + Vite presentation layer
-artifacts/api-server/       Express API boundary
-lib/api-spec/               OpenAPI source of truth
-lib/api-client-react/       Generated React Query client
-lib/api-zod/                Generated request/response validators
-metlib_core/                Modular Python intelligence core
-cli/                        Zero-setup CLI entrypoint
-data/                       Transparent golden-set example
-evaluation/                 Generated machine-readable results
+thoughtvector/customer-support-on-twitter
+```
+
+The dataset is downloaded automatically through `kagglehub` during initial preparation.
+
+Historical cases are used for both:
+
+* Intent classification
+* Retrieval-based grounding
+
+The dataset is not committed to the repository.
+
+---
+
+## Technology Stack
+
+* Python 3.10+
+* scikit-learn
+* FastAPI
+* Groq
+* Requests
+* KaggleHub
+* python-dotenv
+* SlowAPI
+
+### Machine Learning
+
+* TF-IDF Vectorization
+* Logistic Regression
+* Cosine similarity retrieval
+
+### API
+
+* FastAPI
+* Uvicorn
+* SlowAPI rate limiting
+* Server-side Groq credentials
+
+---
+
+# Installation
+
+## Requirements
+
+* Python 3.10 or newer
+* Git
+* Internet access for initial dataset preparation
+* Access to the hosted MetaLib API
+
+Users do **not** need a Groq API key.
+
+---
+
+## Clone the Repository
+
+```bash
+git clone https://github.com/SakaethRam/MetaLib-AI.git
+cd MetaLib-AI
 ```
 
 ---
 
-## Limitations and decision log
+## Create a Virtual Environment
 
-The included classifier and evidence store are deterministic baselines, not
-claims about live customer-support quality. The real system should add a
-validated Twitter conversation loader, brand-specific taxonomy review, stronger
-retrieval, human labels for response quality, and a model-backed judge. Those
-changes belong behind the same pipeline interfaces.
+### Windows
 
-## License
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
 
-See `LICENSE`.
+### macOS / Linux
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+---
+
+## Install Dependencies
+
+```bash
+pip install -r Requirements.txt
+```
+
+Install MetaLib as a local CLI package:
+
+```bash
+pip install -e .
+```
+
+---
+
+# Configuration
+
+MetaLib communicates with the hosted API through:
+
+```text
+METALIB_API_URL
+```
+
+Create a `.env` file in the project root if you need to override the default API endpoint:
+
+```env
+METALIB_API_URL=https://YOUR-RENDER-URL.onrender.com
+```
+
+If the CLI has been configured with the production API endpoint as its default, no `.env` file is required for normal usage.
+
+### Server-side configuration
+
+The hosted API uses:
+
+```text
+GROQ_API_KEY
+GROQ_MODEL
+```
+
+These variables are configured exclusively on the server.
+
+They must never be placed in:
+
+* `MetaLib.py`
+* `.env` committed to Git
+* `.env.example`
+* the Docker image
+* the public repository
+
+---
+
+# Usage
+
+Once installation is complete:
+
+```bash
+metalib
+```
+
+MetaLib starts the CLI and initializes the local dataset and retrieval/classification cache when required.
+
+---
+
+## First Run
+
+On the first execution, MetaLib:
+
+```text
+Download historical dataset
+        ↓
+Prepare training and retrieval data
+        ↓
+Train classifier
+        ↓
+Build retrieval index
+        ↓
+Persist prepared artifacts locally
+        ↓
+Connect to MetaLib API
+        ↓
+Process support requests
+```
+
+Prepared data is cached in:
+
+```text
+.metalib_cache/
+```
+
+The current cache artifact is:
+
+```text
+.metalib_cache/prepared_v4.pkl
+```
+
+Subsequent executions reuse the cache instead of repeating the full preparation process.
+
+---
+
+# Processing Pipeline
+
+For every customer-support request, MetaLib follows this general flow:
+
+```text
+Customer Message
+       │
+       ▼
+Intent Classification
+       │
+       ▼
+Intent Validation / Rule Override
+       │
+       ▼
+Historical Case Retrieval
+       │
+       ▼
+Evidence Evaluation
+       │
+       ├── No usable evidence
+       │          │
+       │          ▼
+       │      ESCALATE
+       │
+       ▼
+LLM Reasoning
+       │
+       ▼
+Response + Decision Validation
+       │
+       ├── Grounded and supported
+       │          │
+       │          ▼
+       │      AUTO_HANDLE
+       │
+       └── Unsupported / ambiguous
+                  │
+                  ▼
+              ESCALATE
+```
+
+---
+
+# Grounding Strategy
+
+MetaLib does not treat an LLM-generated response as automatically trustworthy.
+
+The reasoning layer receives historical evidence and is explicitly instructed to:
+
+* use historical resolutions as operational evidence
+* avoid unsupported claims
+* avoid inventing capabilities
+* avoid promising unsupported outcomes
+* escalate when evidence is insufficient
+
+The final validation layer provides an additional safety boundary.
+
+For example, if historical cases only demonstrate that a duplicate charge can be investigated, MetaLib should not independently promise:
+
+```text
+"We will refund the duplicate charge immediately."
+```
+
+unless the retrieved evidence explicitly supports that operational action.
+
+Instead, the request should be escalated when the requested action exceeds what the historical evidence establishes.
+
+---
+
+# Example
+
+### Customer Request
+
+```text
+I was charged twice for the same order.
+Please refund the extra charge immediately and let me know
+exactly when the money will be back in my account.
+```
+
+### Classification
+
+```text
+Intent: DUPLICATE_CHARGE
+```
+
+### Historical Evidence
+
+```text
+Historical cases support:
+- Investigating the duplicate charge
+- Requesting account information
+- Contacting the customer
+
+Historical cases do not establish:
+- Immediate refund processing
+- A guaranteed refund
+- A specific refund timeline
+```
+
+### Final Decision
+
+```text
+Decision: ESCALATE
+```
+
+### Grounded Response
+
+```text
+We’re sorry you were charged twice. Please DM us your account
+email so we can look into this.
+```
+
+The response deliberately avoids promising an unsupported refund or timeline.
+
+---
+
+# API
+
+MetaLib uses a lightweight FastAPI service for LLM inference.
+
+### Health Check
+
+```http
+GET /
+```
+
+Returns:
+
+```json
+{
+  "name": "MetaLib API",
+  "status": "online"
+}
+```
+
+### Health Endpoint
+
+```http
+GET /health
+```
+
+Returns:
+
+```json
+{
+  "status": "healthy"
+}
+```
+
+### Chat Endpoint
+
+```http
+POST /chat
+```
+
+Request:
+
+```json
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "System instructions"
+    },
+    {
+      "role": "user",
+      "content": "Customer support request"
+    }
+  ]
+}
+```
+
+Response:
+
+```json
+{
+  "response": "Generated response"
+}
+```
+
+---
+
+# Security
+
+MetaLib is designed so that the public CLI does not contain the LLM provider credentials.
+
+The architecture is:
+
+```text
+End User
+   │
+   │ HTTPS
+   ▼
+MetaLib CLI
+   │
+   │ HTTPS
+   ▼
+Hosted MetaLib API
+   │
+   │ Server-side credentials
+   ▼
+Groq API
+```
+
+The following are intentionally excluded from version control:
+
+```text
+.env
+raw/
+.metalib_cache/
+__pycache__/
+```
+
+Never commit production credentials.
+
+---
+
+# Rate Limiting
+
+The hosted API applies request rate limiting to the `/chat` endpoint.
+
+The current limit is:
+
+```text
+20 requests / minute / client
+```
+
+This helps prevent accidental or abusive request spikes against the hosted LLM service.
+
+---
+
+# Repository Structure
+
+```text
+MetaLib-AI/
+│
+├── MetaLib.py
+├── API.py
+├── Requirements.txt
+├── pyproject.toml
+├── Dockerfile
+├── .dockerignore
+├── .gitignore
+├── .env.example
+├── LICENSE
+└── README.md
+```
+
+Runtime-generated directories are intentionally excluded from the repository:
+
+```text
+raw/
+.metalib_cache/
+```
+
+---
+
+# CLI Packaging
+
+MetaLib is exposed as the following command:
+
+```bash
+metalib
+```
+
+The command is configured through `pyproject.toml`:
+
+```toml
+[project.scripts]
+metalib = "MetaLib:main"
+```
+
+After:
+
+```bash
+pip install -e .
+```
+
+the command becomes available in the active Python environment.
+
+---
+
+# Hosted Deployment
+
+The API is designed to run as a containerized FastAPI service.
+
+The included `Dockerfile` starts:
+
+```bash
+uvicorn API:app --host 0.0.0.0 --port ${PORT:-10000}
+```
+
+The hosted deployment requires the following server-side environment variables:
+
+```text
+GROQ_API_KEY
+GROQ_MODEL
+```
+
+The client-facing API URL is configured separately through:
+
+```text
+METALIB_API_URL
+```
+
+---
+
+# Design Principles
+
+## Evidence Before Automation
+
+A request should not be automatically handled simply because an LLM can produce a plausible answer.
+
+Historical evidence must support the operational response.
+
+## Fail Closed
+
+When MetaLib cannot establish sufficient evidence for safe handling, it escalates rather than inventing an answer.
+
+## Separation of Concerns
+
+The system separates:
+
+```text
+Classification
+Retrieval
+Reasoning
+Validation
+```
+
+This makes the individual components independently testable and reduces dependence on a single model decision.
+
+## Server-Side Credentials
+
+LLM provider credentials remain outside the distributed CLI.
+
+Users interact with the hosted API rather than receiving the underlying provider credentials.
+
+---
+
+# License
+
+MetaLib AI is distributed under the terms defined in [`LICENSE`](LICENSE).
