@@ -10,6 +10,4 @@ COPY MetaLib.py .
 COPY API.py .
 COPY pyproject.toml .
 
-RUN pip install --no-cache-dir -e .
-
 CMD ["sh", "-c", "uvicorn API:app --host 0.0.0.0 --port ${PORT:-10000}"]
