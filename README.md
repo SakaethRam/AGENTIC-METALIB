@@ -16,7 +16,7 @@ The system is designed around one core principle:
 
 ---
 
-## END-USER SET-UP GUIDE
+## END-USER SET-UP GUIDE (# IMPORTANT)
 
 ### 1. Clone the repository
 
