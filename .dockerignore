@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Environment / secrets
+.env
+.env.*
+
+# MetaLib generated data
+.metalib_cache/
+raw/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# Testing / tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation / local files
+*.log
