@@ -38,6 +38,15 @@ metalib
 
 MetaLib automatically handles dataset preparation and connects to the hosted MetaLib API for LLM-powered analysis.
 
+### Release Contents
+
+This release includes the complete MetaLib AI source code and the packaged CLI distribution.
+
+The **complete pre-built dataset is also included** for faster setup. Users should use the included dataset when running the packaged release. MetaLib can alternatively download and prepare the dataset automatically on first run, but this process may take **30+ minutes**.
+
+**Version:** `1.0.0`
+
+
 >**No Groq API key, `.env` configuration, backend setup, or Render deployment is required for end users. If Developer, See the Developer Installation Guide below for detailed local-system setup instructions.**
 
 ---
