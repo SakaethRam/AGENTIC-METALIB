@@ -192,4 +192,4 @@ changes belong behind the same pipeline interfaces.
 
 ## License
 
-MIT. See `LICENSE`.
+See `LICENSE`.
