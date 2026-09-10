@@ -8,5 +8,8 @@ version = "1.0.0"
 description = "AI Customer Support Agent"
 requires-python = ">=3.10"
 
+[tool.setuptools]
+py-modules = ["MetaLib"]
+
 [project.scripts]
 metalib = "MetaLib:main"
