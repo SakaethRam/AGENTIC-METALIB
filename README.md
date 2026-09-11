@@ -16,7 +16,7 @@ The system is designed around one core principle:
 
 ## END-USER SET-UP GUIDE (#IMPORTANT)
 
-### 1. Clone the repository
+### 1. Clone the repository (Downloads the Dataset ZIP alongside the repository)
 
 ```bash
 git clone SakaethRam/AGENTIC-METALIB.git && cd AGENTIC-METALIB && curl -L -o MetaLib-CLI.zip https://github.com/SakaethRam/AGENTIC-METALIB/releases/download/v1.0.0/raw.zip
