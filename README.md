@@ -19,7 +19,7 @@ The system is designed around one core principle:
 ### 1. Clone the repository (Downloads the Dataset ZIP alongside the repository)
 
 ```bash
-git clone SakaethRam/AGENTIC-METALIB.git && cd AGENTIC-METALIB && curl -L -o MetaLib-CLI.zip https://github.com/SakaethRam/AGENTIC-METALIB/releases/download/v1.0.0/raw.zip
+git clone https://github.com/SakaethRam/AGENTIC-METALIB.git && cd AGENTIC-METALIB && curl -L -o DATASET.zip https://github.com/SakaethRam/AGENTIC-METALIB/releases/download/v1.0.0/raw.zip
 ```
 
 ### 2. Install MetaLib
