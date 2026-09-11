@@ -44,7 +44,7 @@ MetaLib automatically connects to the hosted MetaLib API (via Render) for LLM-en
 
 ### Release Contents
 
-This release includes the [@MetaLib-AI](https://github.com/SakaethRam/AGENTIC-METALIB/releases/tag/v1.0.0) dataset and the packaged CLI distribution (Auto-downloaded but not extracted to `/raw`).
+This release includes the [@MetaLib-AI](https://github.com/SakaethRam/AGENTIC-METALIB/releases/tag/v1.0.0) dataset and the packaged CLI distribution. Automatically downloaded but not extracted to `/AGENTIC-METALIB` as `/raw`.
 
 >**No Groq API key, `.env` configuration, backend setup, or Render deployment is required for end users. If Developer, See the Developer Installation Guide below for detailed local-system setup instructions.**
 
